@@ -1,0 +1,65 @@
+name: Lint, Build, and Deploy to Pages
+
+on:
+  # Triggers the workflow on push to the main branch
+  push:
+    branches: ["main", "master"]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions needed for deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # 1. Build and Lint Job
+  build_and_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun 🐰
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Lint Check
+        # Run your lint script (which is called 'lint' in package.json)
+        run: bun run lint
+
+      - name: Build Project
+        # This implicitly runs 'prebuild' (which runs 'lint') again,
+        # but the second lint check should pass quickly since no code changed.
+        # Running 'bun run build' ensures the build is done with the correct base path.
+        run: bun run build
+
+      - name: Upload Artifact
+        # Uploads the 'dist' folder for the 'deploy' job to use
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./dist"
+
+  # 2. Deploy Job
+  deploy:
+    # Requires the build_and_lint job to succeed
+    needs: build_and_lint
+    # Ensures only one deploy job runs at a time
+    concurrency:
+      group: "pages"
+      cancel-in-progress: true
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
