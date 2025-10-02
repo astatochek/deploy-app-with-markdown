@@ -1,73 +1,25 @@
-# React + TypeScript + Vite
+Данный отчет фиксирует выполненные работы по настройке среды разработки, интеграции ключевых библиотек и автоматизации процесса сборки и развертывания проекта (Vite/React).
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+1. Подготовка и Конфигурация Разработческой Среды
 
-Currently, two official plugins are available:
+    Инициализация Проекта. Разработка стартовала с инициализации проекта Vite с шаблоном React + TypeScript. В качестве пакетного менеджера был выбран Bun, через который установлены все первоначальные и дополнительные зависимости.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+    Интеграция Tailwind CSS. Для эффективного стилизования интерфейса была выполнена полная интеграция Tailwind CSS. Установлены необходимые пакеты, настроены конфигурационные файлы (vite.config.js).
 
-## React Compiler
+    Настройка Базового Пути. В конфигурационном файле vite.config.ts определен параметр base, соответствующий имени репозитория на GitHub (e.g., /your-repo-name/). Это обеспечивает корректную адресацию статических ресурсов в условиях размещения на поддомене GitHub Pages.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. Контроль Качества
 
-## Expanding the ESLint configuration
+     Настройка Скриптов Контроля Качества. В файле package.json определен скрипт lint для проверки кода с помощью ESLint. Установлена обязательная последовательность выполнения: скрипт prebuild вызывает lint, а скрипт build запускает prebuild перед выполнением vite build. Это гарантирует, что сборка проекта не начнеется, если линтинг обнаружит критические ошибки.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. Автоматизация Развертывания через GitHub Actions
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+    Создание Workflow. Создан и сконфигурирован файл рабочего процесса .github/workflows/deploy.yml. Рабочий процесс запускается автоматически при отправке изменений в ветку main.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+    Двухэтапная CI/CD Модель. Внедрена двухэтапная модель:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+        Job build_and_lint: Отвечает за проверку кода (через bun run build) и создание оптимизированной продакшн-сборки. По завершении эта сборка загружается как артефакт с помощью actions/upload-pages-artifact@v3.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+        Job deploy: Зависит от успешного выполнения первого этапа. Использует экшен actions/deploy-pages@v4 для получения артефакта и его автоматического развертывания на GitHub Pages.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+    Финальная Конфигурация. В настройках репозитория GitHub Pages источник развертывания был переключен на GitHub Actions, что завершило настройку автоматизированного CI/CD-пайплайна.
